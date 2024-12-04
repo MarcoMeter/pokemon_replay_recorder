@@ -32,6 +32,6 @@ Note that the key A is used for `A` and the key S is used for `B`. Change this t
 
 When done recording, press Q or just quit.
 
-# Replay the playthough
+# Replay
 
 `python replay.py --name my_replay.pkl`
