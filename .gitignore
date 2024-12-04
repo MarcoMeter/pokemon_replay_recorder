@@ -1,4 +1,4 @@
-.gb
-.gba
+*.gb
+*.gba
 session
 __pycache__
