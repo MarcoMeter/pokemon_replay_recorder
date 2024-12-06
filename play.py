@@ -11,6 +11,12 @@ def process_frame(frame):
     frame = np.stack((frame, frame, frame), axis=-1)
     return frame
 
+def update_screen(screen, frame, screen_width, screen_height):
+    obs_surface = pygame.surfarray.make_surface(frame)
+    obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
+    screen.blit(obs_surface, (0, 0))
+    pygame.display.flip()
+
 def main():
     parser = argparse.ArgumentParser(description='Play Pokemon Red via Gym environment')
     parser.add_argument('--rom', type=str, help='Path to the Game Boy ROM file', default="./PokemonRed.gb")
@@ -54,12 +60,6 @@ def main():
     pygame.display.set_caption('Pokemon Red Playthrough')
     clock = pygame.time.Clock()
 
-    frame = process_frame(env.render(reduce_res=False))
-    obs_surface = pygame.surfarray.make_surface(frame)
-    obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
-    screen.blit(obs_surface, (0, 0))
-    pygame.display.flip()
-
     # Keyboard controls
     action_mapping = {
         pygame.K_UP: 3,
@@ -75,6 +75,14 @@ def main():
     actions = []
     debounce_time = 0.1  # 100 ms
     last_action_time = 0
+
+    # Press `B` as initial dummy action and step the environment
+    actions.append(5)
+    obs, reward, _, done, info = env.step(5)
+    # Render the environment using pygame
+    frame = process_frame(env.render(reduce_res=False))
+    scale_factor = 1
+    update_screen(screen, frame, screen_width, screen_height)
 
     try:
         done = False
@@ -105,12 +113,9 @@ def main():
             # Step the environment
             obs, reward, _, done, info = env.step(action)
 
-            # Render the observation using Pygame
+            # Render the environment using pygame
             frame = process_frame(env.render(reduce_res=False))
-            obs_surface = pygame.surfarray.make_surface(frame)
-            obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
-            screen.blit(obs_surface, (0, 0))
-            pygame.display.flip()
+            update_screen(screen, frame, screen_width, screen_height)
 
             # Control the frame rate
             clock.tick(12)

@@ -51,7 +51,6 @@ def main():
                 continue
             obs, reward, _, done, info = env.step(action)
             steps += 1
-            print(steps)
             rewards += reward
 
     except KeyboardInterrupt:
