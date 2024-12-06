@@ -3,6 +3,7 @@ import pickle
 from pathlib import Path
 import pygame
 from red_gym_env_v2 import RedGymEnv
+import numpy as np
 
 def main():
     parser = argparse.ArgumentParser(description='Play Pokemon Red via Gym environment')
@@ -104,6 +105,7 @@ def main():
             frame = env.render(reduce_res=False)
             frame = frame.transpose((1, 0, 2))
             frame = frame.squeeze()
+            frame = np.stack((frame, frame, frame), axis=-1)
             obs_surface = pygame.surfarray.make_surface(frame)
             obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
             screen.blit(obs_surface, (0, 0))
