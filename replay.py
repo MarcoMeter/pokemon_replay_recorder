@@ -3,6 +3,7 @@ import time
 import pickle
 from pathlib import Path
 from red_gym_env_v2 import RedGymEnv
+from stats_wrapper import StatsWrapper
 
 def main():
     parser = argparse.ArgumentParser(description='Replay actions in Pokemon Red via Gym environment')
@@ -36,7 +37,7 @@ def main():
     }
 
     # Initialize the environment
-    env = RedGymEnv(config=config)
+    env = StatsWrapper(RedGymEnv(config=config))
     obs, _ = env.reset()
     steps = 0
     rewards = 0
@@ -49,7 +50,7 @@ def main():
         for action in actions:
             if action == -1:
                 continue
-            obs, reward, _, done, info = env.step(action)
+            obs, reward, truncated, done, info = env.step(action)
             steps += 1
             rewards += reward
 
@@ -58,6 +59,18 @@ def main():
 
     print(f"Steps taken: {steps}")
     print(f"Return: {rewards}")
+
+    # print info dict iteratively and nicely formatted
+    print("Info:")
+    info = env.get_info()
+    for key, value in info.items():
+        if isinstance(value, dict):
+            print(f"{key}:")
+            for k, v in value.items():
+                if v > 0:
+                    print(f"\t{k}: {v}")
+        else:
+            print(f"{key}: {value}")
 
 if __name__ == "__main__":
     main()
