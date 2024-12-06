@@ -5,6 +5,12 @@ import pygame
 from red_gym_env_v2 import RedGymEnv
 import numpy as np
 
+def process_frame(frame):
+    frame = frame.transpose((1, 0, 2))
+    frame = frame.squeeze()
+    frame = np.stack((frame, frame, frame), axis=-1)
+    return frame
+
 def main():
     parser = argparse.ArgumentParser(description='Play Pokemon Red via Gym environment')
     parser.add_argument('--rom', type=str, help='Path to the Game Boy ROM file', default="./PokemonRed.gb")
@@ -48,9 +54,7 @@ def main():
     pygame.display.set_caption('Pokemon Red Playthrough')
     clock = pygame.time.Clock()
 
-    frame = env.render(reduce_res=False)
-    frame = frame.transpose((1, 0, 2))
-    frame = frame.squeeze()
+    frame = process_frame(env.render(reduce_res=False))
     obs_surface = pygame.surfarray.make_surface(frame)
     obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
     screen.blit(obs_surface, (0, 0))
@@ -102,10 +106,7 @@ def main():
             obs, reward, _, done, info = env.step(action)
 
             # Render the observation using Pygame
-            frame = env.render(reduce_res=False)
-            frame = frame.transpose((1, 0, 2))
-            frame = frame.squeeze()
-            frame = np.stack((frame, frame, frame), axis=-1)
+            frame = process_frame(env.render(reduce_res=False))
             obs_surface = pygame.surfarray.make_surface(frame)
             obs_surface = pygame.transform.scale(obs_surface, (screen_width, screen_height))
             screen.blit(obs_surface, (0, 0))
