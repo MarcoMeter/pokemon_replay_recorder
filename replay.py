@@ -1,9 +1,10 @@
 import argparse
-import time
 import pickle
 from pathlib import Path
+
 from red_gym_env_v2 import RedGymEnv
 from stats_wrapper import StatsWrapper
+
 
 def main():
     parser = argparse.ArgumentParser(description='Replay actions in Pokemon Red via Gym environment')

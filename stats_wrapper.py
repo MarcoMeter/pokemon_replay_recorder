@@ -1,18 +1,35 @@
+from collections import defaultdict
+
 import numpy as np
-from gymnasium import Env, spaces
-from map_data import map_locations
+from gymnasium import Env
+
 from events import filtered_event_names
+from items import Items
+from map_data import map_locations
+from moves import Moves
+from red_gym_env_v2 import RedGymEnv
 
 event_flags_start = 0xD747
 event_flags_end = 0xD887
 MAP_N_ADDRESS = 0xD35E
 
+
 class StatsWrapper(Env):
-    def __init__(self, env):
+    def __init__(self, env: RedGymEnv):
         self.env = env
         self.action_space = env.action_space
         self.observation_space = env.observation_space
         self.max_steps = env.max_steps
+
+        self.env.pyboy.hook_register(
+            None, "PlayerCanExecuteMove", self.increment_move_hook, None
+        )
+        self.env.pyboy.hook_register(
+            None, "AnimateHealingMachine", self.pokecenter_hook, None
+        )
+        self.env.pyboy.hook_register(
+            None, "StartMenu_Item.choseItem", self.chose_item_hook, None
+        )
 
     def reset(self):
         obs, info = self.env.reset()
@@ -28,7 +45,7 @@ class StatsWrapper(Env):
 
     def render(self):
         return self.env.render()
-    
+
     def init_stats_fields(self, event_obs):
         self.party_size = 1
         self.total_heal = 0
@@ -43,10 +60,10 @@ class StatsWrapper(Env):
         self.location_steps_spent = {loc: 0 for loc in map_locations.keys()}
         self.current_events = event_obs
         self.events_steps = {name: -1 for name in filtered_event_names}
-        # Pokedex caught species (or species in party, depending on what's easier)
-        # Move usage (count pp consumed)
-        # Poke center usage (count number of times used to heal, maybe per poke center)
-        # Item usage (antidote, potion, pokeball is quite obsvious)
+        self.caught_species = np.zeros(152, dtype=np.uint8)
+        self.move_usage = defaultdict(int)
+        self.pokecenter_count = 0
+        self.item_usage = defaultdict(int)
 
     def update_stats(self, event_obs):
         self.party_size = self.env.party_size
@@ -54,6 +71,7 @@ class StatsWrapper(Env):
         self.max_opponent_level = self.env.max_opponent_level
         self.update_location_stats()
         self.update_event_stats(event_obs)
+        self.update_pokedex()
 
     def update_location_stats(self):
         new_location = self.env.read_m(MAP_N_ADDRESS)
@@ -79,18 +97,41 @@ class StatsWrapper(Env):
             self.events_steps[filtered_event_names[i]] = self.env.step_count
         self.current_events = event_obs
 
+    def update_pokedex(self):
+        # TODO: Make a hook
+        _, wPokedexOwned = self.env.pyboy.symbol_lookup("wPokedexOwned")
+        _, wPokedexOwnedEnd = self.env.pyboy.symbol_lookup("wPokedexOwnedEnd")
+
+        caught_mem = self.env.pyboy.memory[wPokedexOwned:wPokedexOwnedEnd]
+        self.caught_species = np.unpackbits(np.array(caught_mem, dtype=np.uint8))
+
+    def increment_move_hook(self, *args, **kwargs):
+        _, wPlayerSelectedMove = self.env.pyboy.symbol_lookup("wPlayerSelectedMove")
+        self.move_usage[Moves(self.env.pyboy.memory[wPlayerSelectedMove]).name.lower()] += 1
+
+    def pokecenter_hook(self, *args, **kwargs):
+        self.pokecenter_count += 1
+
+    def chose_item_hook(self, *args, **kwargs):
+        _, wCurItem = self.env.pyboy.symbol_lookup("wPlayerSelectedMove")
+        self.item_usage[Items(self.env.pyboy.memory[wCurItem]).name.lower()] += 1
+
     def get_info(self):
         info = {
-                "party_size": self.party_size,
-                "total_heal": self.total_heal,
-                "died_count": self.died_count,
-                "party_levels": self.party_levels,
-                "events_sum": self.events_sum,
-                "max_opponent_level": self.max_opponent_level,
-                "seen_coords": self.seen_coords,
-                "location_first_visit_steps": self.location_first_visit_steps,
-                "location_frequency": self.location_frequency,
-                "location_steps_spent": self.location_steps_spent,
-                "events_steps": self.events_steps
-            }
+            "party_size": self.party_size,
+            "total_heal": self.total_heal,
+            "died_count": self.died_count,
+            "party_levels": self.party_levels,
+            "events_sum": self.events_sum,
+            "max_opponent_level": self.max_opponent_level,
+            "seen_coords": self.seen_coords,
+            "location_first_visit_steps": self.location_first_visit_steps,
+            "location_frequency": self.location_frequency,
+            "location_steps_spent": self.location_steps_spent,
+            "events_steps": self.events_steps,
+            "caught_species": self.caught_species,
+            "move_usage": self.move_usage,
+            "pokecenter_count": self.pokecenter_count,
+            "item_usage": self.item_usage,
+        }
         return info
