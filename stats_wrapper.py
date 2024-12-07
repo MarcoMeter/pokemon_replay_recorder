@@ -8,6 +8,7 @@ from items import Items
 from map_data import map_locations
 from moves import Moves
 from red_gym_env_v2 import RedGymEnv
+from pokedex import Pokedex
 
 event_flags_start = 0xD747
 event_flags_end = 0xD887
@@ -69,9 +70,18 @@ class StatsWrapper(Env):
         self.party_size = self.env.party_size
         self.seen_coords = len(self.env.seen_coords)
         self.max_opponent_level = self.env.max_opponent_level
+        self.update_party_levels()
         self.update_location_stats()
         self.update_event_stats(event_obs)
         self.update_pokedex()
+
+    def update_party_levels(self):
+        for i in range(
+            self.env.pyboy.memory[self.env.pyboy.symbol_lookup("wPartyCount")[1]]
+        ):
+            self.party_levels[i] = self.env.pyboy.memory[
+                self.env.pyboy.symbol_lookup(f"wPartyMon{i+1}Level")[1]
+            ]
 
     def update_location_stats(self):
         new_location = self.env.read_m(MAP_N_ADDRESS)
@@ -103,17 +113,21 @@ class StatsWrapper(Env):
         _, wPokedexOwnedEnd = self.env.pyboy.symbol_lookup("wPokedexOwnedEnd")
 
         caught_mem = self.env.pyboy.memory[wPokedexOwned:wPokedexOwnedEnd]
-        self.caught_species = np.unpackbits(np.array(caught_mem, dtype=np.uint8))
+        self.caught_species = np.unpackbits(
+            np.array(caught_mem, dtype=np.uint8), bitorder="little"
+        )
 
     def increment_move_hook(self, *args, **kwargs):
         _, wPlayerSelectedMove = self.env.pyboy.symbol_lookup("wPlayerSelectedMove")
-        self.move_usage[Moves(self.env.pyboy.memory[wPlayerSelectedMove]).name.lower()] += 1
+        self.move_usage[
+            Moves(self.env.pyboy.memory[wPlayerSelectedMove]).name.lower()
+        ] += 1
 
     def pokecenter_hook(self, *args, **kwargs):
         self.pokecenter_count += 1
 
     def chose_item_hook(self, *args, **kwargs):
-        _, wCurItem = self.env.pyboy.symbol_lookup("wPlayerSelectedMove")
+        _, wCurItem = self.env.pyboy.symbol_lookup("wCurItem")
         self.item_usage[Items(self.env.pyboy.memory[wCurItem]).name.lower()] += 1
 
     def get_info(self):
@@ -129,7 +143,11 @@ class StatsWrapper(Env):
             "location_frequency": self.location_frequency,
             "location_steps_spent": self.location_steps_spent,
             "events_steps": self.events_steps,
-            "caught_species": self.caught_species,
+            "caught_species": {
+                Pokedex(pokemon_id + 1).name
+                for pokemon_id, caught in enumerate(self.caught_species)
+                if caught
+            },
             "move_usage": self.move_usage,
             "pokecenter_count": self.pokecenter_count,
             "item_usage": self.item_usage,

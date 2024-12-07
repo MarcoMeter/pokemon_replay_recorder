@@ -11,13 +11,14 @@ def main():
     parser.add_argument('--rom', type=str, help='Path to the Game Boy ROM file', default="./PokemonRed.gb")
     parser.add_argument('--state', type=str, help='Path to the initial state file', default="./has_pokedex_nballs_squirtle.state")
     parser.add_argument('--name', type=str, help='Path to the actions file', default="playthrough.pkl")
+    parser.add_argument('--headless', action='store_true', help="Run Pyboy in headless mode.", default=False)
     args = parser.parse_args()
 
     config = {
         "session_path": Path("./session/"),
         "save_final_state": False,
         "print_rewards": False,
-        "headless": False,
+        "headless": args.headless,
         "init_state": args.state,
         "action_freq": 24,
         "max_steps": 10280,
@@ -34,7 +35,7 @@ def main():
             "use_explore_map_obs": True,
             "use_recent_actions_obs": False,
             "zero_recent_actions": False
-        }
+        },
     }
 
     # Initialize the environment
