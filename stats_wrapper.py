@@ -29,7 +29,7 @@ class StatsWrapper(Env):
             None, "AnimateHealingMachine", self.pokecenter_hook, None
         )
         self.env.pyboy.hook_register(
-            None, "StartMenu_Item.choseItem", self.chose_item_hook, None
+            None, "UseItem_", self.chose_item_hook, None
         )
 
     def reset(self):
