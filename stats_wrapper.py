@@ -29,6 +29,9 @@ class StatsWrapper(Env):
             None, "AnimateHealingMachine", self.pokecenter_hook, None
         )
         self.env.pyboy.hook_register(
+            None, "RedsHouse1FMomText.heal", self.pokecenter_hook, None
+        )
+        self.env.pyboy.hook_register(
             None, "UseItem_", self.chose_item_hook, None
         )
 
@@ -50,6 +53,7 @@ class StatsWrapper(Env):
     def init_stats_fields(self, event_obs):
         self.party_size = 1
         self.total_heal = 0
+        self.num_heals = 0
         self.died_count = 0
         self.party_levels = np.asarray([-1 for _ in range(6)])
         self.events_sum = 0
@@ -64,12 +68,15 @@ class StatsWrapper(Env):
         self.caught_species = np.zeros(152, dtype=np.uint8)
         self.move_usage = defaultdict(int)
         self.pokecenter_count = 0
+        self.pokecenter_location_count = defaultdict(int)
         self.item_usage = defaultdict(int)
 
     def update_stats(self, event_obs):
         self.party_size = self.env.party_size
+        self.total_heal = self.env.total_healing_rew
+        self.num_heals = self.env.num_heals
         self.seen_coords = len(self.env.seen_coords)
-        self.max_opponent_level = self.env.max_opponent_level
+        self.max_opponent_level = self.env.update_max_op_level(opp_base_level=0)
         self.update_party_levels()
         self.update_location_stats()
         self.update_event_stats(event_obs)
@@ -105,6 +112,7 @@ class StatsWrapper(Env):
         changed_ids = np.where(comparison == False)[0]
         for i in changed_ids:
             self.events_steps[filtered_event_names[i]] = self.env.step_count
+            self.events_sum += 1
         self.current_events = event_obs
 
     def update_pokedex(self):
@@ -125,6 +133,8 @@ class StatsWrapper(Env):
 
     def pokecenter_hook(self, *args, **kwargs):
         self.pokecenter_count += 1
+        map_location = self.env.read_m(MAP_N_ADDRESS)
+        self.pokecenter_location_count[map_location] += 1
 
     def chose_item_hook(self, *args, **kwargs):
         _, wCurItem = self.env.pyboy.symbol_lookup("wCurItem")
@@ -133,23 +143,25 @@ class StatsWrapper(Env):
     def get_info(self):
         info = {
             "party_size": self.party_size,
-            "total_heal": self.total_heal,
-            "died_count": self.died_count,
             "party_levels": self.party_levels,
-            "events_sum": self.events_sum,
-            "max_opponent_level": self.max_opponent_level,
-            "seen_coords": self.seen_coords,
-            "location_first_visit_steps": self.location_first_visit_steps,
-            "location_frequency": self.location_frequency,
-            "location_steps_spent": self.location_steps_spent,
-            "events_steps": self.events_steps,
             "caught_species": {
                 Pokedex(pokemon_id + 1).name
                 for pokemon_id, caught in enumerate(self.caught_species)
                 if caught
             },
+            "total_heal": self.total_heal,
+            "num_heals": self.num_heals,
+            "died_count": self.died_count,
+            "seen_coords": self.seen_coords,
+            "max_opponent_level": self.max_opponent_level,
+            "events_sum": self.events_sum,
+            "events_steps": self.events_steps,
             "move_usage": self.move_usage,
-            "pokecenter_count": self.pokecenter_count,
+            "pokecenter_count": sum(self.pokecenter_location_count.values()),
+            "pokecenter_location_count": self.pokecenter_location_count,
             "item_usage": self.item_usage,
+            "location_first_visit_steps": self.location_first_visit_steps,
+            "location_frequency": self.location_frequency,
+            "location_steps_spent": self.location_steps_spent,
         }
         return info

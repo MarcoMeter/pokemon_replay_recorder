@@ -15,7 +15,7 @@ def print_info_nicely(info):
     for value in info.values():
         if isinstance(value, dict):
             nested_max_key_length = max(
-                len(str(nested_key)) for nested_key in value.keys()
+                (len(str(nested_key)) for nested_key in value.keys()), default=0
             )
             max_key_length = max(max_key_length, nested_max_key_length)
     
