@@ -124,6 +124,7 @@ class RedGymEnv(Env):
             config["gb_path"],
             window=head,
             no_input=False,
+            symbols="pokered.sym"
         )
 
         if not config["headless"]:
