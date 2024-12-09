@@ -2,8 +2,34 @@ import argparse
 import pickle
 from pathlib import Path
 
+from map_data import map_locations
 from red_gym_env_v2 import RedGymEnv
 from stats_wrapper import StatsWrapper
+
+
+def print_info_nicely(info):
+    # Find the longest key length for proper alignment
+    max_key_length = max(
+        len(str(k)) for k in info.keys()
+    )
+    for value in info.values():
+        if isinstance(value, dict):
+            nested_max_key_length = max(
+                len(str(nested_key)) for nested_key in value.keys()
+            )
+            max_key_length = max(max_key_length, nested_max_key_length)
+    
+    for key, value in info.items():
+        if isinstance(value, dict):
+            print(f"{key}:")
+            value = dict(sorted(value.items(), key=lambda item: item[1], reverse=True))
+            for k, v in value.items():
+                if "location" in key:
+                    k = map_locations.get(k, k)
+                if v > 0:
+                    print(f"\t{k:<{max_key_length}} : {v}")
+        else:
+            print(f"{key:<{max_key_length}} : {value}")
 
 
 def main():
@@ -64,15 +90,7 @@ def main():
 
     # print info dict iteratively and nicely formatted
     print("Info:")
-    info = env.get_info()
-    for key, value in info.items():
-        if isinstance(value, dict):
-            print(f"{key}:")
-            for k, v in value.items():
-                if v > 0:
-                    print(f"\t{k}: {v}")
-        else:
-            print(f"{key}: {value}")
+    print_info_nicely(env.get_info())
 
 if __name__ == "__main__":
     main()
