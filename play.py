@@ -103,7 +103,7 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = True
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     done = True
 
             # If no valid action is pressed, continue
@@ -129,6 +129,7 @@ def main():
     # Save the actions
     with open(args.name, "wb") as f:
         pickle.dump(actions, f)
+        print(f"Actions saved to {args.name}")
 
 if __name__ == "__main__":
     main()
