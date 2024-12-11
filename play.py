@@ -1,9 +1,11 @@
 import argparse
-import pickle
-from pathlib import Path
-import pygame
-from red_gym_env_v2 import RedGymEnv
 import numpy as np
+import json
+import pygame
+
+from pathlib import Path
+from red_gym_env_v2 import RedGymEnv
+
 
 def process_frame(frame):
     frame = frame.transpose((1, 0, 2))
@@ -125,8 +127,6 @@ def main():
 
     finally:
         pygame.quit()
-        
-    import json
     
     # Save the actions
     with open(args.name.replace(".pkl", ".json"), "w") as f:

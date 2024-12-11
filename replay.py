@@ -1,5 +1,5 @@
 import argparse
-import pickle
+import json
 from pathlib import Path
 
 from map_data import map_locations
@@ -69,8 +69,6 @@ def main():
     obs, _ = env.reset()
     steps = 0
     rewards = 0
-    
-    import json
     
     # Load actions from file
     with open(args.name.replace(".pkl", ".json"), "r") as f:
