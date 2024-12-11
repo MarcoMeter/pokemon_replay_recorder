@@ -125,11 +125,13 @@ def main():
 
     finally:
         pygame.quit()
-
+        
+    import json
+    
     # Save the actions
-    with open(args.name, "wb") as f:
-        pickle.dump(actions, f)
-        print(f"Actions saved to {args.name}")
+    with open(args.name.replace(".pkl", ".json"), "w") as f:
+        json.dump(actions, f)
+        print(f"Actions saved to {args.name.replace('.pkl', '.json')}")
 
 if __name__ == "__main__":
     main()
