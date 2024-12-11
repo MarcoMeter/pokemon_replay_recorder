@@ -69,11 +69,13 @@ def main():
     obs, _ = env.reset()
     steps = 0
     rewards = 0
-
+    
+    import json
+    
     # Load actions from file
-    with open(args.name, "rb") as f:
-        actions = pickle.load(f)
-
+    with open(args.name.replace(".pkl", ".json"), "r") as f:
+        actions = json.load(f)
+    
     try:
         for action in actions:
             if action == -1:
