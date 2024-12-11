@@ -31,8 +31,8 @@ class RedGymEnv(Env):
         self.act_freq = config["action_freq"]
         self.max_steps_config = config["max_steps"]
         self.max_steps = max(self.max_steps_config) if isinstance(self.max_steps_config, list) else self.max_steps_config
-        self.save_video = True #config["save_video"]
-        self.fast_video = True #config["fast_video"]
+        self.save_video = config["save_video"]
+        self.fast_video = config["fast_video"]
         self.frame_stacks = 3
         
         # reset parameters (except init state and max steps)
