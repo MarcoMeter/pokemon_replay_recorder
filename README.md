@@ -38,7 +38,7 @@ When done recording, press `ESC`, `Ctrl + C`, or just quit.
 
 or headless
 
-`python replay.py --name example_replay.json`
+`python replay.py --name example_replay.json --headless`
 
 # Recording Instructions
 
