@@ -42,7 +42,7 @@ or headless
 
 # Recording Instructions
 
-- Play untill receiving TM Dig
+- Play untill receiving TM Dig (ensure to beat Misty and get Badge 2 as well)
 - No need to speed run
 - No need to play absolutely precise
 - Your strategy can be pretty free after all
