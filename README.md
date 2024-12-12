@@ -49,3 +49,4 @@ or headless
 - Out of scope:
     - Completing the pokedex
     - Using the storage system
+- (Optional: You can proceed further in the main story if you want to keep recording.) 
