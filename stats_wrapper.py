@@ -54,7 +54,7 @@ class StatsWrapper(Env):
         self.env.pyboy.hook_register(
             None, "FaintEnemyPokemon.wild_win", self.record_wild_win_hook, None
         )
-        self.env.pyboy.hook_register(None, "HandleBlackOut", self.blackout_hook, None)
+        self.env.pyboy.hook_register(None, "HandlePlayerBlackOut", self.blackout_hook, None)
         self.env.pyboy.hook_register(
             None, "ItemUseBall.captured", self.catch_pokemon_hook, None
         )
