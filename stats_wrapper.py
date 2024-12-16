@@ -1,4 +1,6 @@
 from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum
 
 import numpy as np
 from gymnasium import Env
@@ -8,11 +10,28 @@ from items import Items
 from map_data import map_locations
 from moves import Moves
 from red_gym_env_v2 import RedGymEnv
-from pokedex import Pokedex
+from pokedex import Pokedex, PokedexOrder
 
 event_flags_start = 0xD747
 event_flags_end = 0xD887
 MAP_N_ADDRESS = 0xD35E
+
+
+class WildEncounterResult(Enum):
+    WIN = 0
+    LOSE = 1
+    CAUGHT = 2
+    ESCAPED = 3
+
+    def __repr__(self):
+        return self.name
+
+
+@dataclass
+class WildEncounter:
+    species: PokedexOrder
+    level: int
+    result: WildEncounterResult
 
 
 class StatsWrapper(Env):
@@ -31,8 +50,16 @@ class StatsWrapper(Env):
         self.env.pyboy.hook_register(
             None, "RedsHouse1FMomText.heal", self.pokecenter_hook, None
         )
+        self.env.pyboy.hook_register(None, "UseItem_", self.chose_item_hook, None)
         self.env.pyboy.hook_register(
-            None, "UseItem_", self.chose_item_hook, None
+            None, "FaintEnemyPokemon.wild_win", self.record_wild_win_hook, None
+        )
+        self.env.pyboy.hook_register(None, "HandleBlackOut", self.blackout_hook, None)
+        self.env.pyboy.hook_register(
+            None, "ItemUseBall.captured", self.catch_pokemon_hook, None
+        )
+        self.env.pyboy.hook_register(
+            None, "TryRunningFromBattle.canEscape", self.escaped_battle_hook, None
         )
 
     def reset(self):
@@ -70,6 +97,7 @@ class StatsWrapper(Env):
         self.pokecenter_count = 0
         self.pokecenter_location_count = defaultdict(int)
         self.item_usage = defaultdict(int)
+        self.wild_encounters: list[WildEncounter] = []
 
     def update_stats(self, event_obs):
         self.party_size = self.env.party_size
@@ -140,6 +168,35 @@ class StatsWrapper(Env):
         _, wCurItem = self.env.pyboy.symbol_lookup("wCurItem")
         self.item_usage[Items(self.env.pyboy.memory[wCurItem]).name.lower()] += 1
 
+    def record_battle(self, result: WildEncounterResult):
+        _, wEnemyMon = self.env.pyboy.symbol_lookup("wEnemyMon")
+        _, wEnemyMon1Level = self.env.pyboy.symbol_lookup("wEnemyMon1Level")
+        self.wild_encounters.append(
+            WildEncounter(
+                species=PokedexOrder(self.env.pyboy.memory[wEnemyMon]),
+                level=self.env.pyboy.memory[wEnemyMon1Level],
+                result=result,
+            )
+        )
+
+    def record_wild_win_hook(self, *args, **kwargs):
+        self.record_battle(WildEncounterResult.WIN)
+
+    def blackout_hook(self, *args, **kwargs):
+        _, wIsInBattle = self.env.pyboy.symbol_lookup("wIsInBattle")
+        # lost battle == -1
+        # no battle == 0
+        # wild battle == 1
+        # trainer battle == 2
+        if self.env.pyboy.memory[wIsInBattle] == 1:
+            self.record_battle(WildEncounterResult.LOSE)
+
+    def catch_pokemon_hook(self, *args, **kwargs):
+        self.record_battle(WildEncounterResult.CAUGHT)
+
+    def escaped_battle_hook(self, *args, **kwargs):
+        self.record_battle(WildEncounterResult.ESCAPED)
+
     def get_info(self):
         info = {
             "party_size": self.party_size,
@@ -163,5 +220,6 @@ class StatsWrapper(Env):
             "location_first_visit_steps": self.location_first_visit_steps,
             "location_frequency": self.location_frequency,
             "location_steps_spent": self.location_steps_spent,
+            "wild_encounters": self.wild_encounters,
         }
         return info
