@@ -1,7 +1,6 @@
 import argparse
 import json
 from pathlib import Path
-import pickle
 import pprint
 
 from map_data import map_locations
@@ -76,12 +75,8 @@ def main():
     rewards = 0
     
     # Load actions from file
-    try:
-        with open(args.name.replace(".pkl", ".json"), "r") as f:
-            actions = json.load(f)
-    except FileNotFoundError:
-        with open(args.name, "rb") as f:
-            actions = pickle.load(f)
+    with open(args.name.replace(".pkl", ".json"), "r") as f:
+        actions = json.load(f)
     
     try:
         for action in actions:
