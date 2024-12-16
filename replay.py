@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+import pprint
 
 from map_data import map_locations
 from red_gym_env_v2 import RedGymEnv
@@ -28,6 +29,9 @@ def print_info_nicely(info):
                     k = map_locations.get(k, k)
                 if v > 0:
                     print(f"\t{k:<{max_key_length}} : {v}")
+        elif isinstance(value, list):
+            print(f"{key:<{max_key_length}} :")
+            pprint.pprint(value, indent=max_key_length)
         else:
             print(f"{key:<{max_key_length}} : {value}")
 
