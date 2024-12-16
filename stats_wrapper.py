@@ -170,7 +170,7 @@ class StatsWrapper(Env):
 
     def record_battle(self, result: WildEncounterResult):
         _, wEnemyMon = self.env.pyboy.symbol_lookup("wEnemyMon")
-        _, wEnemyMon1Level = self.env.pyboy.symbol_lookup("wEnemyMon1Level")
+        _, wEnemyMon1Level = self.env.pyboy.symbol_lookup("wCurEnemyLevel")
         self.wild_encounters.append(
             WildEncounter(
                 species=PokedexOrder(self.env.pyboy.memory[wEnemyMon]),
