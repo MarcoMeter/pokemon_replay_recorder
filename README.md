@@ -2,7 +2,7 @@
 
 `conda create -n poke_replay python=3.11 --yes`
 
-`conda activate poke_play`
+`conda activate poke_replay`
 
 `pip install -r requirements.txt`
 
