@@ -19,11 +19,22 @@ def update_screen(screen, frame, screen_width, screen_height):
     screen.blit(obs_surface, (0, 0))
     pygame.display.flip()
 
+def execute_preloaded_actions(env, preloaded_actions):
+    print("Executing preloaded actions to resume the playthrough...")
+    for i, action in enumerate(preloaded_actions):
+        obs, reward, _, done, info = env.step(action)
+        if (i + 1) % 100 == 0:
+            print(f"Progress: {i + 1}/{len(preloaded_actions)}")
+        elif i + 1 == len(preloaded_actions):
+            print(f"Progress: {i + 1}/{len(preloaded_actions)}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Play Pokemon Red via Gym environment')
     parser.add_argument('--rom', type=str, help='Path to the Game Boy ROM file', default="./PokemonRed.gb")
     parser.add_argument('--state', type=str, help='Path to the initial state file', default="./has_pokedex_nballs_squirtle.state")
     parser.add_argument('--name', type=str, help='Name of the playthrough', default="playthrough.pkl")
+    parser.add_argument('--resume', type=str, help='Path to the JSON file with preloaded actions to resume from', default=None)
     args = parser.parse_args()
 
     config = {
@@ -54,14 +65,6 @@ def main():
     env = RedGymEnv(config=config)
     obs, _ = env.reset()
 
-    # Initialize Pygame
-    pygame.init()
-    scale_factor = 10
-    screen_width, screen_height = obs["screens"].shape[1] * scale_factor, obs["screens"].shape[0] * scale_factor
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption('Pokemon Red Playthrough')
-    clock = pygame.time.Clock()
-
     # Keyboard controls
     action_mapping = {
         pygame.K_UP: 3,
@@ -78,13 +81,32 @@ def main():
     debounce_time = 0.1  # 100 ms
     last_action_time = 0
 
-    # Press `B` as initial dummy action and step the environment
-    actions.append(5)
-    obs, reward, _, done, info = env.step(5)
-    # Render the environment using pygame
+    # Load preloaded actions if resume argument is provided
+    preloaded_actions = []
+    if args.resume:
+        with open(args.resume, 'r') as f:
+            preloaded_actions = json.load(f)
+            actions += preloaded_actions
+        execute_preloaded_actions(env, preloaded_actions)
+    else:
+        # Press `B` as initial dummy action and step the environment
+        actions.append(5)
+        obs, reward, _, done, info = env.step(5)
+
+    # Initialize Pygame
+    pygame.init()
+    scale_factor = 10
+    screen_width, screen_height = obs["screens"].shape[1] * scale_factor, obs["screens"].shape[0] * scale_factor
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption('Pokemon Red Playthrough')
+    clock = pygame.time.Clock()
+
+    # Initial render
     frame = process_frame(env.render(reduce_res=False))
     scale_factor = 1
     update_screen(screen, frame, screen_width, screen_height)
+
+    print("Ready to play!")
 
     try:
         done = False

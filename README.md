@@ -32,6 +32,10 @@ Note that the key A is used for `A` and the key S is used for `B`. Change this t
 
 When done recording, press `ESC`, `Ctrl + C`, or just quit.
 
+You may also resume a saved playthrough as follows:
+
+`python play.py --name my_replay_resume.json --resume my_replay.json`
+
 # Replay
 
 `python replay.py --name example_replay.json`
