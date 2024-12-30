@@ -6,6 +6,12 @@
 
 `pip install -r requirements.txt`
 
+# Known Issues
+
+On MacOS, you might need to uninstall pysdl2-dll.
+
+`pip uninstall pysdl2-dll`
+
 # Add ROM
 
 The Pokémon Red Rom should be located at the path `./PokemonRed.gb`. Otherwise specify the path using `--rom my_rom.gb`.
