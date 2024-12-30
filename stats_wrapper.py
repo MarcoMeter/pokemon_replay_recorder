@@ -105,6 +105,7 @@ class StatsWrapper(Env):
         self.num_heals = self.env.num_heals
         self.seen_coords = len(self.env.seen_coords)
         self.max_opponent_level = self.env.update_max_op_level(opp_base_level=0)
+        self.died_count = self.env.died_count
         self.update_party_levels()
         self.update_location_stats()
         self.update_event_stats(event_obs)
