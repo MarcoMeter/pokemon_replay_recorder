@@ -110,6 +110,7 @@ class StatsWrapper(Env):
         self.update_location_stats()
         self.update_event_stats(event_obs)
         self.update_pokedex()
+        self.update_time_played()
 
     def update_party_levels(self):
         for i in range(
@@ -153,6 +154,12 @@ class StatsWrapper(Env):
         self.caught_species = np.unpackbits(
             np.array(caught_mem, dtype=np.uint8), bitorder="little"
         )
+    
+    def update_time_played(self):
+        hours = self.env.pyboy.memory[self.env.pyboy.symbol_lookup("wPlayTimeHours")[1]]
+        minutes = self.env.pyboy.memory[self.env.pyboy.symbol_lookup("wPlayTimeMinutes")[1]]
+        self.seconds_played = hours * 3600 + minutes * 60
+        self.seconds_played += self.env.pyboy.memory[self.env.pyboy.symbol_lookup("wPlayTimeSeconds")[1]]
 
     def increment_move_hook(self, *args, **kwargs):
         _, wPlayerSelectedMove = self.env.pyboy.symbol_lookup("wPlayerSelectedMove")
@@ -200,6 +207,7 @@ class StatsWrapper(Env):
 
     def get_info(self):
         info = {
+            "seconds_played": self.seconds_played,
             "party_size": self.party_size,
             "party_levels": self.party_levels,
             "caught_species": {
