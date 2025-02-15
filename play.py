@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import json
 import pygame
+import time
 
 from pathlib import Path
 from red_gym_env_v2 import RedGymEnv
@@ -65,14 +66,14 @@ def main():
     env = RedGymEnv(config=config)
     obs, _ = env.reset()
 
-    # Keyboard controls
+    # Keyboard controls for game actions
     action_mapping = {
         pygame.K_UP: 3,
         pygame.K_DOWN: 0,
         pygame.K_LEFT: 1,
         pygame.K_RIGHT: 2,
-        pygame.K_a: 4, # A
-        pygame.K_s: 5, # B
+        pygame.K_a: 4,  # A
+        pygame.K_s: 5,  # B
         pygame.K_RETURN: 6,
     }
 
@@ -107,6 +108,7 @@ def main():
     update_screen(screen, frame, screen_width, screen_height)
 
     print("Ready to play!")
+    print("Press P to take a screenshot of the game screen.")
 
     try:
         done = False
@@ -127,8 +129,15 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = True
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    done = True
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        done = True
+                    elif event.key == pygame.K_p:
+                        # Take a screenshot when 'P' is pressed
+                        timestamp = int(time.time())
+                        screenshot_filename = f"screenshot_{timestamp}.png"
+                        pygame.image.save(screen, screenshot_filename)
+                        print(f"Screenshot saved to {screenshot_filename}")
 
             # If no valid action is pressed, continue
             if action == -1:
