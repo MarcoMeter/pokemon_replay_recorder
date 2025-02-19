@@ -42,7 +42,7 @@ You may also resume a saved playthrough as follows:
 
 `python play.py --name my_replay_resume.json --resume my_replay.json`
 
-During the playthrough, you can press `P` to capture a screenshot.
+During the playthrough, you can press `P` to capture a screenshot or press `O` to save the state.
 
 # Replay
 

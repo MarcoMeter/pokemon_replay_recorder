@@ -608,3 +608,7 @@ class RedGymEnv(Env):
             return self.essential_map_locations[map_idx]
         else:
             return -1
+
+    def save_state(self, path):
+        with open(path, "wb") as f:
+            self.pyboy.save_state(f)
